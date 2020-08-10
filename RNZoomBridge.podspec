@@ -12,15 +12,18 @@ Pod::Spec.new do |s|
   s.homepage     = "https://zoom.us/"
   s.license      = "MIT"
   s.author       = package["author"]
-  s.platform     = :ios, "8.0"
+  s.platform     = :ios, "9.0"
   s.source       = { :git => "https://github.com/chaimPaneth/react-native-zoom-bridge.git", :tag => "master" }
   s.source_files = "ios/**/*.{h,m}"
   s.requires_arc = true
   s.dependency "React"
   s.libraries = "sqlite3", "z.1.2.5", "c++"
   s.frameworks = 'VideoToolbox', "ReplayKit", "CoreBluetooth"
-  s.vendored_frameworks = "ios/libs/MobileRTC.framework", "ios/libs/MobileRTCScreenShare.framework"
-  s.resources = "ios/libs/MobileRTC.framework", "ios/libs/MobileRTCScreenShare.framework", "ios/libs/MobileRTCResources.bundle"
+  # s.vendored_frameworks = "ios/libs/MobileRTC.framework", "ios/libs/MobileRTCScreenShare.framework"
+  # s.resources = "ios/libs/MobileRTC.framework", "ios/libs/MobileRTCScreenShare.framework", "ios/libs/MobileRTCResources.bundle"
+    s.vendored_frameworks = "ios/libs/MobileRTC.framework"
+  s.resources = "ios/libs/MobileRTC.framework","ios/libs/MobileRTCResources.bundle"
+
   s.xcconfig = { 'FRAMEWORK_SEARCH_PATHS' => '"$(SRCROOT)/../node_modules/react-native-zoom-bridge/ios/libs"' }
   s.info_plist = {
     'NSCameraUsageDescription' => 'For people to see you during meetings, we need access to your camera.',
