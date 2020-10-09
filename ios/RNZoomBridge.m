@@ -1,5 +1,6 @@
 
 #import "RNZoomBridge.h"
+#import "RNZoomUsBridgeEventEmitter.h"
 
 @implementation RNZoomBridge
 {
@@ -9,6 +10,8 @@
   RCTPromiseResolveBlock meetingPromiseResolve;
   RCTPromiseRejectBlock meetingPromiseReject;
 }
+
+static RNZoomUsBridgeEventEmitter *internalEmitter = nil;
 
 - (instancetype)init {
   if (self = [super init]) {
@@ -166,13 +169,16 @@ RCT_EXPORT_METHOD(
 
 - (void)onMobileRTCAuthReturn:(MobileRTCAuthError)returnValue {
   NSLog(@"nZoomSDKInitializeResult, errorCode=%d", returnValue);
+    RNZoomUsBridgeEventEmitter *emitter = [RNZoomUsBridgeEventEmitter allocWithZone: nil];
   if(returnValue != MobileRTCAuthError_Success) {
+      [emitter userSDKInitilized:@{@"error": @"Error on initialize", }];
     initializePromiseReject(
       @"ERR_ZOOM_INITIALIZATION",
       [NSString stringWithFormat:@"Error: %d", returnValue],
       [NSError errorWithDomain:@"us.zoom.sdk" code:returnValue userInfo:nil]
     );
   } else {
+    [emitter userSDKInitilized:@{}];
     initializePromiseResolve(@"Initialize Zoom SDK successfully.");
   }
 }
@@ -201,6 +207,18 @@ RCT_EXPORT_METHOD(
 - (void)onMeetingStateChange:(MobileRTCMeetingState)state {
   NSLog(@"onMeetingStatusChanged, meetingState=%d", state);
 
+   RNZoomUsBridgeEventEmitter *emitter = [RNZoomUsBridgeEventEmitter allocWithZone: nil];
+   
+    if(state == MobileRTCMeetingState_Idle) {
+         [emitter userStateChange:@{@"state": @"idle" }];
+        [self leaveMeeting];
+    }
+    
+    if(state == MobileRTCMeetingState_InMeeting) {
+        [emitter userStateChange:@{@"state": @"inMeeting" }];
+        [emitter userStartedAMeeting:@{@"state": @"startMeeting"}];
+    }
+    
   if (state == MobileRTCMeetingState_InMeeting || state == MobileRTCMeetingState_Idle) {
     if (!meetingPromiseResolve) {
       return;
@@ -215,11 +233,13 @@ RCT_EXPORT_METHOD(
 
 - (void)onMeetingError:(MobileRTCMeetError)errorCode message:(NSString *)message {
   NSLog(@"onMeetingError, errorCode=%d, message=%@", errorCode, message);
-
+    RNZoomUsBridgeEventEmitter *emitter = [RNZoomUsBridgeEventEmitter allocWithZone: nil];
   if (!meetingPromiseResolve) {
     return;
+  }else {
+      [emitter meetingErrored:@{@"error": [NSString stringWithFormat:@"Error: %d, internalErrorCode=%@", errorCode, message]}];
   }
-
+  
   meetingPromiseReject(
     @"ERR_ZOOM_MEETING",
     [NSString stringWithFormat:@"Error: %d, internalErrorCode=%@", errorCode, message],
@@ -229,5 +249,30 @@ RCT_EXPORT_METHOD(
   meetingPromiseResolve = nil;
   meetingPromiseReject = nil;
 }
+
+- (void)onWaitingRoomStatusChange:(BOOL)needWaiting
+{
+   NSLog(@"onWaitingRoomStatusChange, needWaiting=%d", needWaiting);
+    if (needWaiting) {
+        // waiting room not supported lets leave meeting
+        RNZoomUsBridgeEventEmitter *emitter = [RNZoomUsBridgeEventEmitter allocWithZone: nil];
+        [emitter meetingWaitingRoomIsActive:@{}];
+        [self leaveMeeting];
+    }
+}
+
+- (void) onSinkMeetingUserLeft:(NSUInteger)userID {
+    RNZoomUsBridgeEventEmitter *emitter = [RNZoomUsBridgeEventEmitter allocWithZone: nil];
+    [emitter userEndedTheMeeting:@{@"userId": [NSString stringWithFormat:@"%d", userID]}];
+}
+
+- (void)leaveMeeting {
+  MobileRTCMeetingService *ms = [[MobileRTC sharedRTC] getMeetingService];
+  if (!ms) return;
+  [ms leaveMeetingWithCmd:LeaveMeetingCmd_Leave];
+  RNZoomUsBridgeEventEmitter *emitter = [RNZoomUsBridgeEventEmitter allocWithZone: nil];
+  [emitter userEndedTheMeeting:@{}];
+}
+
 
 @end

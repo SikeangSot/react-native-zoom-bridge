@@ -78,4 +78,12 @@ RCT_EXPORT_MODULE();
     }
 }
 
+- (void)userStateChange:(NSDictionary *)result
+{
+    if (hasListeners) {
+        [self sendEventWithName:@"meetingStatusChanged" body:result];
+    }
+}
+
+
 @end
