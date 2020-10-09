@@ -1,6 +1,9 @@
+import { NativeModules } from "react-native";
 
-import { NativeModules } from 'react-native';
-
-const { RNZoomBridge } = NativeModules;
+const {
+  RNZoomBridge,
+  RNZoomUsBridgeEventEmitter: _RNZoomUsBridgeEventEmitter,
+} = NativeModules;
 
 export default RNZoomBridge;
+export const RNZoomUsBridgeEventEmitter = _RNZoomUsBridgeEventEmitter;
