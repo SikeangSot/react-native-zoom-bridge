@@ -8,6 +8,11 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.LifecycleEventListener;
 
+import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.Arguments;
+
 import us.zoom.sdk.ZoomSDK;
 import us.zoom.sdk.ZoomError;
 import us.zoom.sdk.ZoomSDKInitializeListener;
@@ -38,6 +43,12 @@ public class RNZoomBridgeModule extends ReactContextBaseJavaModule implements Zo
     reactContext.addLifecycleEventListener(this);
   }
 
+	public void sendEvent(ReactContext reactContext, String eventName, WritableMap params) {
+		reactContext
+		.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+		.emit(eventName, params);
+	}
+
   @Override
   public String getName() {
     return "RNZoomBridge";
@@ -59,9 +70,14 @@ public class RNZoomBridgeModule extends ReactContextBaseJavaModule implements Zo
           @Override
           public void run() {
             ZoomSDK zoomSDK = ZoomSDK.getInstance();
+
+            WritableMap params = Arguments.createMap();
+						params.putString("state", "SDKInitialized");
+						sendEvent(reactContext, "SDKInitialized", params);
+
             zoomSDK.initialize(reactContext.getCurrentActivity(), appKey, appSecret, webDomain, RNZoomBridgeModule.this);
           }
-      });
+			});
     } catch (Exception ex) {
       promise.reject("ERR_UNEXPECTED_EXCEPTION", ex);
     }
@@ -201,7 +217,9 @@ public class RNZoomBridgeModule extends ReactContextBaseJavaModule implements Zo
       );
     } else {
       registerListener();
-      initializePromise.resolve("Initialize Zoom SDK successfully.");
+			WritableMap params = Arguments.createMap();
+			sendEvent(reactContext, "SDKInitialized", params);
+			initializePromise.resolve("Initialize Zoom SDK successfully.");
     }
   }
 
@@ -209,20 +227,28 @@ public class RNZoomBridgeModule extends ReactContextBaseJavaModule implements Zo
   public void onMeetingStatusChanged(MeetingStatus meetingStatus, int errorCode, int internalErrorCode) {
     Log.i(TAG, "onMeetingStatusChanged, meetingStatus=" + meetingStatus + ", errorCode=" + errorCode + ", internalErrorCode=" + internalErrorCode);
 
-    if (meetingPromise == null) {
+		if (meetingPromise == null) {
       return;
     }
 
-    if(meetingStatus == MeetingStatus.MEETING_STATUS_FAILED) {
-      meetingPromise.reject(
-              "ERR_ZOOM_MEETING",
-              "Error: " + errorCode + ", internalErrorCode=" + internalErrorCode
-      );
-      meetingPromise = null;
-    } else if (meetingStatus == MeetingStatus.MEETING_STATUS_INMEETING) {
-      meetingPromise.resolve("Connected to zoom meeting");
-      meetingPromise = null;
-    }
+		WritableMap params = Arguments.createMap();
+		if(meetingStatus == MeetingStatus.MEETING_STATUS_FAILED) {
+			meetingPromise.reject(
+							"ERR_ZOOM_MEETING",
+							"Error: " + errorCode + ", internalErrorCode=" + internalErrorCode
+			);
+			meetingPromise = null;
+			sendEvent(reactContext, "meetingError", params);
+		} else if (meetingStatus == MeetingStatus.MEETING_STATUS_DISCONNECTING) {
+			sendEvent(reactContext, "meetingEnded", params);
+		} else if (meetingStatus == MeetingStatus.MEETING_STATUS_INMEETING) {
+			sendEvent(reactContext, "meetingStarted", params);
+			meetingPromise.resolve("Connected to zoom meeting");
+//			meetingPromise = null;
+		} else {
+			params.putString("eventProperty", "onMeetingStatusChanged, meetingStatus=" + meetingStatus + ", errorCode=" + errorCode + ", internalErrorCode=" + internalErrorCode);
+			sendEvent(reactContext, "meetingStatusChanged", params);
+		}
   }
 
   @Override
