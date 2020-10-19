@@ -245,6 +245,15 @@ public class RNZoomBridgeModule extends ReactContextBaseJavaModule implements Zo
 			sendEvent(reactContext, "meetingStarted", params);
 			meetingPromise.resolve("Connected to zoom meeting");
 //			meetingPromise = null;
+		} else if (meetingStatus == MeetingStatus.MEETING_STATUS_WAITINGFORHOST) {
+			params.putString("eventProperty",  meetingStatus.toString());
+			sendEvent(reactContext, "waitingForHost", params);
+		} else if (meetingStatus == MeetingStatus.MEETING_STATUS_IN_WAITING_ROOM) {
+			params.putString("eventProperty",  meetingStatus.toString());
+			sendEvent(reactContext, "inWaitingRoom", params);
+		} else if (meetingStatus == MeetingStatus.MEETING_STATUS_RECONNECTING) {
+			params.putString("eventProperty",  meetingStatus.toString());
+			sendEvent(reactContext, "reconnecting", params);
 		} else {
 			params.putString("eventProperty", "onMeetingStatusChanged, meetingStatus=" + meetingStatus + ", errorCode=" + errorCode + ", internalErrorCode=" + internalErrorCode);
 			sendEvent(reactContext, "meetingStatusChanged", params);
