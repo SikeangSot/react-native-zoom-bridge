@@ -3,13 +3,13 @@
 rm -f -r ./node_modules/react-native-zoom-bridge/ios/libs && \
 mkdir -p ./node_modules/react-native-zoom-bridge/ios/libs && \
 cd ./node_modules/react-native-zoom-bridge/ios/libs && \
-curl -L https://github.com/zoom/zoom-sdk-ios/releases/download/v4.6.21666.0428/ios-mobilertc-all-4.6.21666.0428-n.zip > file.zip && \
+curl -L https://github.com/zoom/zoom-sdk-ios/releases/download/v5.2.42037.1112/ios-mobilertc-all-5.2.42037.1112-clientlog.zip > file.zip && \
 unzip file.zip && \
-cd ios-mobilertc-all-4.6.21666.0428-n/lib && \
+cd ios-mobilertc-all-5.2.42037.1112-clientlog/lib && \
 mv * ../../ && \
 cd ../../ && \
 rm file.zip && \
-rm -r ios-mobilertc-all-4.6.21666.0428-n && \
+rm -r ios-mobilertc-all-5.2.42037.1112-clientlog && \
 rm -r __MACOSX
 sed -i.bak 's/\#import <MobileRTC\//\#import </g' ./MobileRTC.framework/Headers/MobileRTC.h
 sed -i.bak 's/\#import <MobileRTC\//\#import </g' ./MobileRTC.framework/Headers/MobileRTCMeetingService+AppShare.h
