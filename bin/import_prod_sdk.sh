@@ -4,7 +4,7 @@ rm -f -r ./node_modules/react-native-zoom-bridge/ios/libs && \
 mkdir -p ./node_modules/react-native-zoom-bridge/ios/libs && \
 cd ./node_modules/react-native-zoom-bridge/ios/libs && \
 curl -L https://github.com/zoom/zoom-sdk-ios/archive/zoom-sdk-ios-5.2.42037.1112.zip > file.zip && \
-unzip file.zip && \
+unzip file.zip -d zoom-sdk-ios-5.2.42037.1112/lib  && \
 cd zoom-sdk-ios-5.2.42037.1112/lib && \
 mv * ../../ && \
 cd ../../ && \
