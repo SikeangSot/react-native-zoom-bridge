@@ -4,7 +4,7 @@ rm -f -r ./node_modules/react-native-zoom-bridge/ios/libs && \
 mkdir -p ./node_modules/react-native-zoom-bridge/ios/libs && \
 cd ./node_modules/react-native-zoom-bridge/ios/libs && \
 curl -L https://github.com/zoom/zoom-sdk-ios/releases/download/v5.2.42037.1112/ios-mobilertc-all-5.2.42037.1112-clientlog.zip > file.zip && \
-unzip file.zip && \
+unzip file.zip -d ios-mobilertc-all-5.2.42037.1112-clientlog && \
 cd ios-mobilertc-all-5.2.42037.1112-clientlog/lib && \
 mv * ../../ && \
 cd ../../ && \
